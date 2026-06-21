@@ -6,14 +6,16 @@
 
 import json
 import os
-import subprocess
 import platform
-from time import sleep
+import subprocess
 import sys
+from time import sleep
 
 
 # customizable confirm prompt
-def confirm(message: str = "Continue", default: bool | None = None, direct: bool | None = None) -> bool:
+def confirm(
+    message: str = "Continue", default: bool | None = None, direct: bool | None = None
+) -> bool:
     prompts = {True: "(Y/n)", False: "(y/N)", None: "(y/n)"}
     full_message = f"{message} {prompts[default]}: "
 
@@ -52,7 +54,7 @@ Welcome to the Jellyfin-RPC installer
 """)
 
 config_path = path + "main.json"
-use_existing = False
+use_existing = True
 
 if os.path.isfile(config_path):
     print(f"Found existing config: {config_path}")
@@ -67,7 +69,9 @@ if os.path.isfile(config_path):
 if not use_existing:
     print("----------Jellyfin----------")
     url = input("URL (include http/https): ")
-    api_key = input(f"API key [Create one here: {url}/web/index.html#/dashboard/keys]: ")
+    api_key = input(
+        f"API key [Create one here: {url}/web/index.html#/dashboard/keys]: "
+    )
     print(
         "Enter a single username or enter multiple usernames in a comma separated list."
     )
@@ -76,7 +80,9 @@ if not use_existing:
     self_signed_cert = None
     if url.startswith("https://"):
         self_signed_cert = confirm(
-            message="Are you using a self signed certificate?", default=False, direct=True
+            message="Are you using a self signed certificate?",
+            default=False,
+            direct=True,
         )
 
     print(
@@ -149,15 +155,21 @@ if not use_existing:
         blacklist = None
 
     show_simple = not confirm(
-        message="Do you want to see episode names in the activity?", default=True, direct=None
+        message="Do you want to see episode names in the activity?",
+        default=True,
+        direct=None,
     )
 
     append_prefix = confirm(
-        "Do you want to add a leading 0 to season and episode numbers?", default=False, direct=True
+        "Do you want to add a leading 0 to season and episode numbers?",
+        default=False,
+        direct=True,
     )
 
     add_divider = confirm(
-        "Do you want to add a divider between numbers, ex. S01 - E01?", default=False, direct=True
+        "Do you want to add a divider between numbers, ex. S01 - E01?",
+        default=False,
+        direct=True,
     )
 
     jellyfin = {
@@ -179,7 +191,9 @@ if not use_existing:
     if appid == "":
         appid = None
 
-    show_paused = confirm(message="Do you want to show paused videos?", default=True, direct=True)
+    show_paused = confirm(
+        message="Do you want to show paused videos?", default=True, direct=True
+    )
 
     print("----------Buttons----------")
 
@@ -213,13 +227,17 @@ if not use_existing:
     print("----------Images----------")
     images = confirm(message="Do you want images?", default=False)
     if images:
-        imgur_images = confirm("Do you want to use imgur for images?", default=False, direct=True)
+        imgur_images = confirm(
+            "Do you want to use imgur for images?", default=False, direct=True
+        )
         litterbox_images = False
         if imgur_images:
             client_id = input("Enter your imgur client id: ")
             imgur = {"client_id": client_id}
         else:
-            litterbox_images = confirm("Do you want to use litterbox for images?", default=False, direct=True)
+            litterbox_images = confirm(
+                "Do you want to use litterbox for images?", default=False, direct=True
+            )
             imgur = None
 
         images = {
@@ -408,7 +426,8 @@ else:
         )
 
     autostart = confirm(
-        message="Do you want to autostart Jellyfin-RPC at login using systemd?", default=False
+        message="Do you want to autostart Jellyfin-RPC at login using systemd?",
+        default=False,
     )
     if autostart:
         print(f"\nSetting up service file in {path}")

@@ -32,7 +32,7 @@ struct Args {
         short = 't',
         long = "wait-time",
         help = "Time to wait between loops in seconds",
-        default_value_t = 7
+        default_value_t = 3
     )]
     wait_time: usize,
     #[arg(

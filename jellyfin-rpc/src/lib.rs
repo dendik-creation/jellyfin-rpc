@@ -7,7 +7,7 @@ use discord_rich_presence::{
 };
 pub use error::JfError;
 pub use jellyfin::{Button, MediaType};
-use jellyfin::{ExternalUrl, NowPlayingItem, PlayTime, RawSession, Session, VirtualFolder};
+use jellyfin::{ExternalUrl, NowPlayingItem, Person, PlayTime, RawSession, Session, VirtualFolder};
 use log::{debug, warn};
 use reqwest::header::{HeaderMap, AUTHORIZATION};
 use serde::{Deserialize, Serialize};
@@ -126,6 +126,20 @@ impl Client {
             }
         }
 
+        // Enrich session with People data (for director info) if it's a Movie
+        if let Some(session) = &self.session {
+            if session.now_playing_item.media_type == MediaType::Movie
+                && session.now_playing_item.people.is_none()
+            {
+                let item_id = session.now_playing_item.id.clone();
+                if let Ok(people) = self.fetch_item_people(&item_id) {
+                    if let Some(s) = self.session.as_mut() {
+                        s.now_playing_item.people = Some(people);
+                    }
+                }
+            }
+        }
+
         if let Some(session) = &self.session {
             if session.now_playing_item.media_type == MediaType::None {
                 return Err(Box::new(JfError::UnrecognizedMediaType));
@@ -145,13 +159,25 @@ impl Client {
                 if let Ok(imgur_url) = external::imgur::get_image(self) {
                     image_url = imgur_url;
                 } else {
-                    debug!("imgur::get_image() didnt return an image, using default..")
+                    debug!("imgur::get_image() didnt return an image, falling back to direct Jellyfin image..");
+                    // Fallback to direct Jellyfin image URL
+                    if let Ok(iu) = self.get_image() {
+                        image_url = iu;
+                    } else {
+                        debug!("self.get_image() didnt return an image either, using default..");
+                    }
                 }
             } else if self.litterbox_options.enabled && self.show_images {
                 if let Ok(litterbox_url) = external::litterbox::get_image(self) {
                     image_url = litterbox_url;
                 } else {
-                    debug!("litterbox::get_image() didn't return an image, using default..")
+                    debug!("litterbox::get_image() didn't return an image, falling back to direct Jellyfin image..");
+                    // Fallback to direct Jellyfin image URL
+                    if let Ok(iu) = self.get_image() {
+                        image_url = iu;
+                    } else {
+                        debug!("self.get_image() didnt return an image either, using default..");
+                    }
                 }
             } else if self.show_images {
                 if let Ok(iu) = self.get_image() {
@@ -498,6 +524,34 @@ impl Client {
             .map(|s| format!("⭐ {:.1}/10", s))
             .unwrap_or_default();
 
+        // Extract director from People array
+        let director = session
+            .now_playing_item
+            .people
+            .as_ref()
+            .and_then(|people| {
+                people
+                    .iter()
+                    .find(|p| {
+                        p.person_type
+                            .as_ref()
+                            .map(|t| t == "Director")
+                            .unwrap_or(false)
+                    })
+                    .map(|p| p.name.clone())
+            })
+            .unwrap_or_default();
+
+        // Calculate duration in minutes (floor) from run_time_ticks
+        let duration_minutes = session
+            .now_playing_item
+            .run_time_ticks
+            .map(|ticks| {
+                let minutes = ticks / 10_000_000 / 60;
+                format!("{} Minutes", minutes)
+            })
+            .unwrap_or_default();
+
         result = result
             .replace("{title}", title)
             .replace("{original-title}", &original_title)
@@ -505,6 +559,8 @@ impl Client {
             .replace("{year}", &year)
             .replace("{critic-score}", critic_score)
             .replace("{community-score}", community_score)
+            .replace("{director}", &director)
+            .replace("{duration-minutes}", &duration_minutes)
             .replace("{version}", VERSION.unwrap_or("UNKNOWN"));
 
         Self::sanitize_display_format(&result).replace("{sep}", separator)
@@ -809,6 +865,24 @@ impl Client {
                 BlacklistedLibraries::Uninitialized
             }
         }
+    }
+
+    /// Fetch People data (director, etc.) for a specific item from the Jellyfin API
+    fn fetch_item_people(&self, item_id: &str) -> JfResult<Vec<Person>> {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "PascalCase")]
+        struct ItemDetails {
+            people: Option<Vec<Person>>,
+        }
+
+        let path = format!("Items/{}?Fields=People", item_id);
+        let details: ItemDetails = self
+            .reqwest
+            .get(self.url.join(&path)?)
+            .send()?
+            .json()?;
+
+        Ok(details.people.unwrap_or_default())
     }
 }
 

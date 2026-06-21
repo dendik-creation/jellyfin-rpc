@@ -145,6 +145,15 @@ impl Button {
     }
 }
 
+/// Represents a person associated with a media item (e.g., Director, Actor).
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "PascalCase")]
+pub struct Person {
+    pub name: String,
+    #[serde(rename = "Type")]
+    pub person_type: Option<String>,
+}
+
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct NowPlayingItem {
@@ -161,6 +170,7 @@ pub struct NowPlayingItem {
     pub community_rating: Option<f64>,
     pub original_title: Option<String>,
     pub path: Option<String>,
+    pub people: Option<Vec<Person>>,
     // Episode related
     pub parent_index_number: Option<i32>,
     pub index_number: Option<i32>,
