@@ -1,5 +1,5 @@
-use crate::VERSION;
 use colored::Colorize;
+use jellyfin_rpc::VERSION;
 use log::warn;
 
 pub fn checker() {
