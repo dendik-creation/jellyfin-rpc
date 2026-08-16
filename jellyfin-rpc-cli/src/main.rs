@@ -24,6 +24,12 @@ struct Args {
     #[arg(short = 'c', long = "config", help = "Path to the config file")]
     config: Option<String>,
     #[arg(
+        short = 'e',
+        long = "env-file",
+        help = "Path to a .env file (default: ./.env, then next to the binary, then the config dir)"
+    )]
+    env_file: Option<String>,
+    #[arg(
         short = 'i',
         long = "image-urls-file",
         help = "Path to the uploaded image url cache"
@@ -51,7 +57,7 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let mut settings = match Settings::load(args.config.as_deref()) {
+    let mut settings = match Settings::load(args.config.as_deref(), args.env_file.as_deref()) {
         Ok(settings) => settings,
         Err(err) => {
             eprintln!("{} {}", "Configuration error:".red(), err);
@@ -85,9 +91,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if settings.servers.is_empty() {
         error!("No Jellyfin server configured.");
         error!(
-            "Every server needs both {} and {}.",
-            "url".green(),
-            "api_key".green()
+            "Set {} and {} in a .env file, or write a config file.",
+            "JELLYFIN_URL".green(),
+            "JELLYFIN_API_KEY".green()
         );
         error!(
             "Config file location: {}",
@@ -99,7 +105,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if settings.usernames.is_empty() && settings.servers.iter().any(|s| s.usernames.is_empty()) {
-        error!("No username configured. Set {}.", "jellyfin.username".green());
+        error!(
+            "No username configured. Set {}.",
+            "JELLYFIN_USERNAME".green()
+        );
         std::process::exit(1);
     }
 

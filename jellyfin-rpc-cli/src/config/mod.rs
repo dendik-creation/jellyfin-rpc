@@ -1,12 +1,14 @@
 //! Configuration adapter.
 //!
-//! Two layers, each overriding the previous one:
+//! Three layers, each overriding the previous one:
 //!
 //! 1. built-in defaults
 //! 2. the JSON config file (`main.json`)
+//! 3. environment variables, seeded from a `.env` file if one exists
 //!
 //! Command line flags are applied on top by `main`.
 
+pub mod env;
 pub mod file;
 pub mod paths;
 
@@ -80,8 +82,10 @@ impl Default for Settings {
 }
 
 impl Settings {
-    /// Defaults, then the config file if it exists.
-    pub fn load(config_path: Option<&str>) -> CliResult<Self> {
+    /// Defaults, then the config file (if it exists), then the environment.
+    ///
+    /// A missing config file is not an error: a `.env` alone is enough to run.
+    pub fn load(config_path: Option<&str>, env_path: Option<&str>) -> CliResult<Self> {
         let mut settings = Settings::default();
 
         let path = match config_path {
@@ -96,6 +100,9 @@ impl Settings {
                 Err(err) => return Err(format!("config file {} is invalid: {}", path, err).into()),
             }
         }
+
+        env::load_dotenv(env_path);
+        env::apply(&mut settings)?;
 
         if settings.images.cache_path.is_empty() {
             settings.images.cache_path = paths::urls_path()?;

@@ -24,3 +24,26 @@ pub fn config_path() -> Result<String, Box<dyn std::error::Error>> {
 pub fn urls_path() -> Result<String, Box<dyn std::error::Error>> {
     Ok(config_dir()?.join("urls.json").to_string_lossy().into_owned())
 }
+
+/// Every place a `.env` is looked for, in priority order.
+///
+/// The working directory comes first so a per-checkout `.env` beats the global one.
+pub fn env_file_candidates() -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+
+    if let Ok(cwd) = env::current_dir() {
+        candidates.push(cwd.join(".env"));
+    }
+
+    if let Ok(exe) = env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            candidates.push(dir.join(".env"));
+        }
+    }
+
+    if let Ok(dir) = config_dir() {
+        candidates.push(dir.join(".env"));
+    }
+
+    candidates
+}
