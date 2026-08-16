@@ -8,3 +8,10 @@
 /.vscode
 /jftest
 /shell.nix
+
+# Local configuration — these hold API keys, keep them out of git
+.env
+.env.*
+!.env.example
+/config.json
+/urls.json
