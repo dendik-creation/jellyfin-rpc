@@ -16,7 +16,69 @@ For installation instructions refer to the [Wiki](https://github.com/JustRadical
 
 ## Setup
 
-For setup instructions refer to the [Wiki](https://github.com/JustRadical/jellyfin-rpc/wiki/Setup)
+Copy [`.env.example`](../.env.example) to `.env`, fill in the server url, API key and
+username, and run `jellyfin-rpc`. Every option is documented inside that file.
+
+A JSON config file still works and is still read first; see [`example.json`](../example.json).
+For the original single-server setup guide refer to the
+[Wiki](https://github.com/JustRadical/jellyfin-rpc/wiki/Setup).
+
+### Which device does it show?
+
+Any of them. Jellyfin sessions are matched by **username**, not by device, so
+watching from a phone, a browser or the desktop app all produce the same
+presence. The only machine that matters is the one running `jellyfin-rpc`:
+Discord's IPC socket is local, so the binary has to run next to the Discord
+client you want the status to appear on.
+
+### Watching several servers at once
+
+Servers are polled in the order they are configured, and the first one with
+something playing wins. A server that is offline is logged and skipped, so a
+remote server going down never stops the local one from being read.
+
+```dotenv
+JELLYFIN_NAME=vps
+JELLYFIN_URL=https://jellyfin.example.com
+JELLYFIN_API_KEY=...
+JELLYFIN_USERNAME=me
+
+JELLYFIN_2_NAME=local
+JELLYFIN_2_URL=http://localhost:8096
+JELLYFIN_2_API_KEY=...
+```
+
+`JELLYFIN_2_*` through `JELLYFIN_9_*` add further servers. `JELLYFIN_USERNAME`
+applies to every server; give a server its own `JELLYFIN_n_USERNAME` only when
+the account name differs there.
+
+### Artwork from a server that is not public
+
+Discord loads the large image itself, so it must be able to reach the URL.
+`IMAGES_HOSTING=direct` therefore cannot work for `http://localhost:8096` — use
+`imgur` (needs `IMGUR_CLIENT_ID`) or `litterbox` (no account, links last 72h),
+which upload the poster and hand Discord a public link. Uploads are cached per
+item in `urls.json`, so each poster is uploaded once.
+
+### Where configuration comes from
+
+Later layers override earlier ones:
+
+1. built-in defaults
+2. the JSON config file — `%APPDATA%\jellyfin-rpc\main.json`, or `-c <path>`
+3. environment variables, seeded from the first `.env` found in the working
+   directory, next to the binary, then the config directory (`-e <path>` to pick one)
+4. command line flags
+
+Run `jellyfin-rpc --print-config` to see what all of that resolved to, and
+`-v debug` to log which server and which device each session came from.
+
+### Changing the name Discord shows
+
+The word after "Watching" is the name of the Discord *application* behind
+`DISCORD_APPLICATION_ID`. To change it, create an application at
+[discord.com/developers](https://discord.com/developers/applications), name it
+whatever you want, and put its id in `DISCORD_APPLICATION_ID`.
 
 
 ## Pictures of Jellyfin-RPC in action

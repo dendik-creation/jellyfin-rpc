@@ -1,0 +1,75 @@
+{
+  "poll_interval": 3,
+  "log_level": "info",
+
+  "servers": [
+    {
+      "name": "vps",
+      "url": "https://jellyfin.example.com",
+      "api_key": "replace-me",
+      "self_signed_cert": false
+    },
+    {
+      "name": "local",
+      "url": "http://localhost:8096",
+      "api_key": "replace-me"
+    }
+  ],
+
+  "jellyfin": {
+    "username": "your-jellyfin-username",
+    "music": {
+      "display": {
+        "details_text": "{track}",
+        "state_text": "By {artists} {sep} {album}",
+        "image_text": "{album}"
+      },
+      "separator": " • ",
+      "status_display_type": "state"
+    },
+    "movies": {
+      "display": {
+        "details_text": "{title}",
+        "state_text": "{year} {sep} {duration-minutes}",
+        "image_text": "{title}"
+      },
+      "separator": " • ",
+      "status_display_type": "details"
+    },
+    "episodes": {
+      "display": {
+        "details_text": "{show-title}",
+        "state_text": "S{season-padded} - E{episode-padded} {title}",
+        "image_text": "{show-title}"
+      },
+      "separator": " • ",
+      "status_display_type": "details"
+    },
+    "blacklist": {
+      "media_types": [],
+      "libraries": []
+    }
+  },
+
+  "discord": {
+    "application_id": "1053747938519679018",
+    "show_paused": true,
+    "buttons": [
+      { "name": "dynamic", "url": "dynamic" },
+      { "name": "dynamic", "url": "dynamic" }
+    ]
+  },
+
+  "imgur": {
+    "client_id": ""
+  },
+
+  "images": {
+    "hosting": "litterbox",
+    "process_images": true,
+    "size": 512,
+    "bg": true,
+    "bg_blur": 3,
+    "corner_radius": 4
+  }
+}
