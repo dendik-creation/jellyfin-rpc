@@ -185,8 +185,7 @@ impl MediaSource for JellyfinHttpSource {
             if let Some(height) = max_height {
                 image_url
                     .query_pairs_mut()
-                    .append_pair("maxHeight", &height.to_string())
-                    .append_pair("maxWidth", &((height * 9) / 16).to_string());
+                    .append_pair("maxHeight", &height.to_string());
             }
 
             // Jellyfin answers 404 with a text body rather than an image.

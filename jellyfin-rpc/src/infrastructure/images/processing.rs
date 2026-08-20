@@ -3,7 +3,7 @@ use std::io::Cursor;
 
 #[derive(Debug, Clone)]
 pub struct ImageProcessingOptions {
-    /// Height of the 9:16 canvas, e.g. 512 gives 288x512. `None` keeps the source height.
+    /// Height of the 9:16 canvas in pixels. `None` keeps the source height.
     pub size: Option<u32>,
     /// Fill the empty sides with a blurred copy instead of transparency.
     pub background: bool,
